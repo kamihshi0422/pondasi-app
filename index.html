@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#171923">
+<title>音声ポン出し</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100svh;background:radial-gradient(circle at 50% 0%,#30364b,#171923 58%);color:#f7f7fb;display:grid;place-items:center;padding:24px}
+main{width:min(100%,520px);text-align:center}
+h1{font-size:clamp(1.6rem,5vw,2.2rem);margin:0 0 8px}
+.sub{color:#aeb4c6;margin:0 0 34px}
+.pad{width:min(72vw,300px);aspect-ratio:1;border:0;border-radius:32px;background:linear-gradient(145deg,#ff8fbd,#ed4e91);color:#fff;font-size:clamp(1.5rem,6vw,2rem);font-weight:800;letter-spacing:.06em;box-shadow:0 12px 0 #a52e60,0 22px 48px #0008;cursor:pointer;touch-action:manipulation;transition:transform .08s,box-shadow .08s}
+.pad:active{transform:translateY(9px);box-shadow:0 3px 0 #a52e60,0 12px 28px #0008}
+.pad.playing{background:linear-gradient(145deg,#ffc36f,#f18435);box-shadow:0 12px 0 #a95222,0 22px 48px #0008}
+.status{min-height:1.5em;margin:30px 0 22px;color:#d6d9e5}
+.controls{display:flex;justify-content:center;gap:12px;align-items:center;flex-wrap:wrap}
+button.secondary{border:1px solid #555d73;background:#252a39;color:#fff;border-radius:12px;padding:12px 20px;font-size:1rem;cursor:pointer}
+.volume{display:flex;align-items:center;gap:10px;margin:24px auto 0;max-width:280px;color:#c4c9d7;font-size:.9rem}
+input[type=range]{width:150px;accent-color:#ff79ad}
+footer{margin-top:38px;color:#7f879b;font-size:.8rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>音声ポン出し</h1>
+  <p class="sub">ボタンを押して音声を再生</p>
+  <button class="pad" id="playButton" type="button">▶ 再生</button>
+  <p class="status" id="status" aria-live="polite">待機中</p>
+  <div class="controls">
+    <button class="secondary" id="stopButton" type="button">■ 停止</button>
+    <button class="secondary" id="replayButton" type="button">↻ 最初から</button>
+  </div>
+  <label class="volume">音量 <input id="volume" type="range" min="0" max="1" step=".01" value=".85"><span id="volumeValue">85%</span></label>
+  <footer>PC・スマートフォン対応</footer>
+  <audio id="sound" preload="auto" src="audio.mp3"></audio>
+</main>
+<script>
+const audio=document.getElementById('sound');
+const playButton=document.getElementById('playButton');
+const stopButton=document.getElementById('stopButton');
+const replayButton=document.getElementById('replayButton');
+const statusText=document.getElementById('status');
+const volume=document.getElementById('volume');
+const volumeValue=document.getElementById('volumeValue');
+audio.volume=Number(volume.value);
+function updatePlaying(playing){
+  playButton.classList.toggle('playing',playing);
+  playButton.textContent=playing?'❚❚ 再生中':'▶ 再生';
+}
+async function play(fromStart=false){
+  if(fromStart) audio.currentTime=0;
+  try{await audio.play();statusText.textContent='再生中';updatePlaying(true);}
+  catch(e){statusText.textContent='再生できませんでした。もう一度ボタンを押してください。';updatePlaying(false);}
+}
+playButton.addEventListener('click',()=>audio.paused?play():audio.pause());
+stopButton.addEventListener('click',()=>{audio.pause();audio.currentTime=0;statusText.textContent='停止';updatePlaying(false);});
+replayButton.addEventListener('click',()=>play(true));
+volume.addEventListener('input',()=>{audio.volume=Number(volume.value);volumeValue.textContent=Math.round(audio.volume*100)+'%';});
+audio.addEventListener('pause',()=>{if(audio.currentTime>0&&audio.currentTime<audio.duration){statusText.textContent='一時停止中';updatePlaying(false);}});
+audio.addEventListener('ended',()=>{statusText.textContent='再生完了';updatePlaying(false);});
+</script>
+</body>
+</html>
